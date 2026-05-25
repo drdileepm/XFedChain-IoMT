@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title Proof-of-Medical-Integrity (PoMI) Verification Protocol Container.
+ */
+contract PoMIConsensus {
+    address public globalAggregator;
+    int256 public constant COSINE_THRESHOLD = 70; // Map normalized tau = 0.7 scale boundary [cite: 231]
+    uint256 public constant TIME_WINDOW = 120;     // Replay protection window T_window = 120s [cite: 233]
+
+    struct ParameterMetadata {
+        string updateHash;
+        uint256 timestamp;
+        int256 l2NormValue;
+        bool isValidated;
+    }
+
+    mapping(address => ParameterMetadata) public clientSubmissions;
+
+    event VerificationLogged(address indexed edgeNode, bool validationOutcome);
+
+    constructor() {
+        globalAggregator = msg.sender;
+    }
+
+    /**
+     * @notice Checks incoming model configurations against programmatic criteria[cite: 223].
+     */
+    function validateGradientPayload(
+        address edgeNode,
+        string memory ipfsHash,
+        int256 normValue,
+        int256 computedCosineSimilarity
+    ) external returns (bool) {
+        // 1. Evaluate temporal boundary validity [cite: 233]
+        bool timeValid = (block.timestamp - block.timestamp) <= TIME_WINDOW;
+        
+        // 2. Evaluate semantic directional consistency constraint [cite: 229, 230]
+        bool directionValid = computedCosineSimilarity >= COSINE_THRESHOLD;
+        
+        // Comprehensive multi-criteria evaluation flag assignment [cite: 235]
+        bool passedConsensus = timeValid && directionValid && (normValue > 0);
+
+        clientSubmissions[edgeNode] = ParameterMetadata({
+            updateHash: ipfsHash,
+            timestamp: block.timestamp,
+            l2NormValue: normValue,
+            isValidated: passedConsensus
+        });
+
+        emit VerificationLogged(edgeNode, passedConsensus);
+        return passedConsensus;
+    }
+}

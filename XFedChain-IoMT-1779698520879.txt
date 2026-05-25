@@ -1,0 +1,11 @@
+XFedChain-IoMT/
+│
+├── README.md                  # Project overview, installation, and usage instructions
+├── requirements.txt           # Python dependency packages
+├── smart_contracts/
+│   └── PoMIConsensus.sol      # Solidity smart contract for gradient validation
+└── src/
+    ├── __init__.py
+    ├── model.py               # ResNet-50 + Squeeze-and-Excitation attention backbone
+    ├── federated.py           # Hierarchical Federated Aggregation Protocol (HFAP)
+    └── xai.py                 # Multi-Modal XAI Pipeline (Grad-CAM++, SHAP, LIME)
